@@ -9,6 +9,38 @@ from supabase import create_client
 from icalendar import Calendar
 import pandas as pd
 
+# --- Passwort-Schutz ---
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == st.secrets["APP_PASSWORD"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # First run, show input for password.
+        st.text_input(
+            "Passwort eingeben", type="password", on_change=password_entered, key="password"
+        )
+        return False
+    elif not st.session_state["password_correct"]:
+        # Password not correct, show input + error.
+        st.text_input(
+            "Passwort eingeben", type="password", on_change=password_entered, key="password"
+        )
+        st.error("😕 Passwort falsch")
+        return False
+    else:
+        # Password correct.
+        return True
+
+if not check_password():
+    st.stop()
+
 # --- Verbindung zu Supabase herstellen ---
 supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
 
